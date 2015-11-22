@@ -18,44 +18,63 @@ module Lita
         self.expires = nil
       end
 
-      route /^st2/i, :action, command: false, help: {
-        '!st2 action list' => 'Get the list of actions.',
-        '!st2 action get' => 'Get individual action.',
-        '!st2 action create' => 'Create a new action.',
-        '!st2 action update' => 'Update an existing action.',
-        '!st2 action delete' => 'Delete an existing action.',
-        '!st2 action execute' => 'A command to invoke an action manually.',
-
-        }
+      route /^st2 login/, :login, command: false, help: { "st2 login" => "login with st2-api" }
+      route /^st2 list/, :list, command: false, help: { "st2 list" => "list available st2 chatops commands" }
 
       def authenticate
-        conn = http(:url => "http://example.com")
-        conn.port = 9100
-        conn.basic_auth('testu', 'testp')
-        response = conn.post('/tokens')
-        #self.class.expires = JSON.parse(response.body)['return'][0]['expirey']
-        #self.class.token = JSON.parse(resp.body)['return'][0]['token']
-        response
+        resp = http.post("#{config.url}:9100/v1/tokens") do |req|
+          req.body = {}
+          req.headers['Authorization'] = http.set_authorization_header(:basic_auth, config.username, config.password)
+        end
+        self.class.token = JSON.parse(resp.body)['token']
+        self.class.expires = JSON.parse(resp.body)['expiry']
+        resp
       end
 
-        def action(msg)
-          if expired
-            authenticate
-          end
-          msg.matches.flatten.first
-          msg.reply "yo!"
+      def list(msg)
+        if expired
+          authenticate
         end
-
-
-        def expired
-          self.class.token.nil? || Time.now >= Time.at(self.class.expires)
+        s = make_request(":9101/v1/actionalias", "")
+        if JSON.parse(s.body).empty?
+          msg.reply "No Action Aliases Registered"
+        else
+          msg.reply "hey #{s.status} #{s.body}"
         end
+      end
 
-        def port
-          config.port ||= 9100
+      def login(msg)
+        http_resp = authenticate
+        if ![200, 201, 280].index(http_resp.status).nil?
+          msg.reply "login successful\ntoken: #{self.class.token}"
+        elsif http_resp.status == 500
+          msg.reply "#{http_resp.status}: login failed!!"
+        else
+          msg.reply "#{http_resp.status}: login failed!!"
         end
+      end
+
+      def expired
+        self.class.token.nil? || Time.now >= Time.parse(self.class.expires)
+      end
+
+      def make_request(path, body)
+        resp = http.get("#{config.url}#{path}") do |req|
+          req.body = {}
+          req.headers = headers
+          req.body = body
+        end
+        resp
+      end
+
+      def headers
+        headers = {}
+        headers['Content-Type'] = 'application/json'
+        headers['X-Auth-Token'] = "#{self.class.token}"
+        headers
+      end
+
+      Lita.register_handler(self)
     end
-
-    Lita.register_handler(Stackstorm)
   end
 end
