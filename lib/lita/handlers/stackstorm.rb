@@ -1,14 +1,16 @@
+require 'json'
+
 module Lita
   module Handlers
     class Stackstorm < Handler
+      # insert handler code here
 
       config :url, required: true
       config :username, required: true
       config :password, required: true
-      config :port, required: false
 
       class << self
-        attr_accessor :token, :expires, :command_prefix
+        attr_accessor :token, :expires
       end
 
       def self.config(config)
