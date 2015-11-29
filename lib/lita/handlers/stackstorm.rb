@@ -35,7 +35,7 @@ module Lita
         if expired
           authenticate
         end
-        s = make_request(":9101/v1/actionalias", "")
+        s = make_request(":9999/v1/actionalias", "")
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
         else
