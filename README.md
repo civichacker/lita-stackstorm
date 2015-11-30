@@ -1,6 +1,6 @@
 # lita-stackstorm
 
-**lita-stackstorm** is an adapter for [Lita](https://www.lita.io) that allows your bot to interact with your stackstorm installation via st2api.
+**lita-stackstorm** is an handler for [Lita](https://www.lita.io) that allows your bot to interact with your stackstorm installation via st2api.
 
 ## Installation
 
