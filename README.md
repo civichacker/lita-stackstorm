@@ -1,6 +1,6 @@
 # lita-stackstorm
 
-TODO: Add a description of the plugin.
+**lita-stackstorm** is an adapter for [Lita](https://www.lita.io) that allows your bot to interact with your stackstorm installation via st2api.
 
 ## Installation
 
@@ -12,7 +12,26 @@ gem "lita-stackstorm"
 
 ## Configuration
 
-TODO: Describe any configuration attributes the plugin exposes.
+### Required
+
+* `url` (String) – The location of the running st2api service.
+* `username` (String) – The username used to authenticate with st2api.
+* `password` (String) – The password used to authenticate with st2api.
+
+### Optional
+
+* `auth_port` (Integer) – Port used for Authentication. Defaults to `9101`.
+* `execution_port` (Integer) – Port for executions. Defaults to `9100`.
+
+### Example
+
+``` ruby
+Lita.configure do |config|
+    config.handlers.stackstorm.url = "https://st2.example.com"
+    config.handlers.stackstorm.username = ENV["ST2_USERNAME"]
+    config.handlers.stackstorm.password = ENV["ST2_PASSWORD"]
+end
+```
 
 ## Usage
 
