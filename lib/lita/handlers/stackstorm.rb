@@ -33,6 +33,22 @@ module Lita
         resp
       end
 
+      def call_alias(msg)
+        if expired
+          authenticate
+        end
+        payload = {
+          name: 'pack_info',
+          format: 'pack info {{pack}}',
+          command:'pack info salt',
+          user: 'lita',
+          source_channel: 'chatops',
+          notification_channel: 'lita'
+        }
+        s = make_post_request(":9999/v1/aliasexecution", payload)
+        msg.reply "#{config.url}:9999/#/history/#{s.body.to_s[1..-2]}/general"
+      end
+
       def list(msg)
         if expired
           authenticate
