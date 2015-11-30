@@ -35,4 +35,26 @@ end
 
 ## Usage
 
-TODO: Describe the plugin's features and how to use them.
+`st2 list` - lists all chatops aliases from registered packs.
+
+### Executing Actions
+
+Action Aliases require the `!` prefix. For example, in order to run the `packs.info` action when investigating the linux pack, you'll run:
+
+```shell
+!pack info linux
+```
+
+This handler also provide support for partial commands. For example, suppose you type:
+
+```shell
+!pack deploy
+```
+
+The handler will return the closest likely matches:
+
+```shell
+possible matches:
+    pack deploy {{pack}}
+    pack deploy {{pack}} from {{repo}}
+```
