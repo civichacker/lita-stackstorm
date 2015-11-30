@@ -80,10 +80,20 @@ module Lita
         resp = http.get("#{config.url}#{path}") do |req|
           req.body = {}
           req.headers = headers
-          req.body = body
+          req.body = body.to_json
         end
         resp
       end
+
+      def make_post_request(path, body)
+        resp = http.post("#{config.url}#{path}") do |req|
+          req.body = {}
+          req.headers = headers
+          req.body = body.to_json
+        end
+        resp
+      end
+
 
       def headers
         headers = {}
