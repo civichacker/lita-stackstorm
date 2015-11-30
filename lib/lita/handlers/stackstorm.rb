@@ -8,6 +8,8 @@ module Lita
       config :url, required: true
       config :username, required: true
       config :password, required: true
+      config :auth_port, required: false, default: 9100
+      config :execution_port, required: false, default: 9101
 
       class << self
         attr_accessor :token, :expires
@@ -24,7 +26,7 @@ module Lita
       route /^!(.*)$/, :call_alias, command: false, help: {}
 
       def authenticate
-        resp = http.post("#{config.url}:9100/v1/tokens") do |req|
+        resp = http.post("#{config.url}:#{config.auth_port}/v1/tokens") do |req|
           req.body = {}
           req.headers['Authorization'] = http.set_authorization_header(:basic_auth, config.username, config.password)
         end
@@ -50,8 +52,8 @@ module Lita
             source_channel: 'chatops',
             notification_channel: 'lita'
           }
-          s = make_post_request(":9999/v1/aliasexecution", payload)
-          msg.reply "#{config.url}:9999/#/history/#{s.body.to_s[1..-2]}/general"
+          s = make_post_request(":#{config.execution_port}/v1/aliasexecution", payload)
+          msg.reply "#{config.url}:#{config.execution_port}/#/history/#{s.body.to_s[1..-2]}/general"
         elsif l.length > 0
           response_text = "possible matches:"
           l.each do |match|
@@ -67,7 +69,7 @@ module Lita
         if expired
           authenticate
         end
-        s = make_request(":9999/v1/actionalias", "")
+        s = make_request(":#{config.execution_port}/v1/actionalias", "")
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
         else
