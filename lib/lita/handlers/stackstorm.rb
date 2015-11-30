@@ -37,16 +37,30 @@ module Lita
         if expired
           authenticate
         end
-        payload = {
-          name: 'pack_info',
-          format: 'pack info {{pack}}',
-          command:'pack info salt',
-          user: 'lita',
-          source_channel: 'chatops',
-          notification_channel: 'lita'
-        }
-        s = make_post_request(":9999/v1/aliasexecution", payload)
-        msg.reply "#{config.url}:9999/#/history/#{s.body.to_s[1..-2]}/general"
+        command_array = msg.matches.flatten.first.split
+        candidates = redis.scan_each(:match => "#{command_array[0..1].join(' ')}*")
+        p = candidates.take_while {|i| i.split.length == command_array.length}
+        l = candidates.take_while {|i| i.split.length > command_array.length}
+        if p.length == 1
+          payload = {
+            name: command_array[0..1].join('_'),
+            format: "#{command_array[0..1].join(' ')} {{pack}}",
+            command: msg,
+            user: msg.user,
+            source_channel: 'chatops',
+            notification_channel: 'lita'
+          }
+          s = make_post_request(":9999/v1/aliasexecution", payload)
+          msg.reply "#{config.url}:9999/#/history/#{s.body.to_s[1..-2]}/general"
+        elsif l.length > 0
+          response_text = "possible matches:"
+          l.each do |match|
+            response_text+= "\n\t#{match}"
+          end
+          msg.reply response_text
+        else
+          msg.reply "Failed! No Aliases Found..."
+        end
       end
 
       def list(msg)
