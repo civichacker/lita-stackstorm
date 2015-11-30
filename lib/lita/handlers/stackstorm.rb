@@ -57,7 +57,12 @@ module Lita
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
         else
-          msg.reply "hey #{s.status} #{s.body}"
+          j = JSON.parse(s.body)
+          a = ""
+          j.take_while{|i| i['enabled'] }.each do |command|
+            a+= "#{command['formats'].first} -> #{command['action_ref']}\n"
+          end
+          msg.reply a
         end
       end
 
