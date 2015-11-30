@@ -74,7 +74,10 @@ module Lita
           j = JSON.parse(s.body)
           a = ""
           j.take_while{|i| i['enabled'] }.each do |command|
-            a+= "#{command['formats'].first} -> #{command['action_ref']}\n"
+            command['formats'].each do |format|
+              redis.set(format, command['action_ref'])
+              a+= "#{format} -> #{command['action_ref']}\n"
+            end
           end
           msg.reply a
         end
