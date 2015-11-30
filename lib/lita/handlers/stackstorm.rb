@@ -18,8 +18,10 @@ module Lita
         self.expires = nil
       end
 
-      route /^st2 login/, :login, command: false, help: { "st2 login" => "login with st2-api" }
-      route /^st2 list/, :list, command: false, help: { "st2 list" => "list available st2 chatops commands" }
+      route /^st2 login$/, :login, command: false, help: { "st2 login" => "login with st2-api" }
+      route /^st2 list$/, :list, command: false, help: { "st2 list" => "list available st2 chatops commands" }
+
+      route /^!(.*)$/, :call_alias, command: false, help: {}
 
       def authenticate
         resp = http.post("#{config.url}:9100/v1/tokens") do |req|
