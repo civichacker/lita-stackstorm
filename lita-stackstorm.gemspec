@@ -1,12 +1,12 @@
 Gem::Specification.new do |spec|
   spec.name          = "lita-stackstorm"
-  spec.version       = "0.1.0"
+  spec.version       = "0.4.0"
   spec.authors       = ["Jurnell Cockhren"]
-  spec.email         = ["jurnell.cockhren@sophicware.com"]
-  spec.description   = "TODO: Add a description"
-  spec.summary       = "TODO: Add a summary"
-  spec.homepage      = "TODO: Add a homepage"
-  spec.license       = "TODO: Add a license"
+  spec.email         = ["jurnell@sophicware.com"]
+  spec.description   = "Stackstorm handler for lita 4+"
+  spec.summary       = spec.description
+  spec.homepage      = "https://github.com/sophicware/lita-stackstorm"
+  spec.license       = "MIT"
   spec.metadata      = { "lita_plugin_type" => "handler" }
 
   spec.files         = `git ls-files`.split($/)
