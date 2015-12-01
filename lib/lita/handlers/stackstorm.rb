@@ -47,7 +47,7 @@ module Lita
           payload = {
             name: command_array[0..1].join('_'),
             format: "#{command_array[0..1].join(' ')} {{pack}}",
-            command: msg,
+            command: msg.message,
             user: msg.user,
             source_channel: 'chatops',
             notification_channel: 'lita'
