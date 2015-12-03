@@ -53,7 +53,7 @@ module Lita
             notification_channel: 'lita'
           }
           s = make_post_request(":#{config.execution_port}/v1/aliasexecution", payload)
-          msg.reply "#{config.url}:#{config.execution_port}/#/history/#{s.body.to_s[1..-2]}/general"
+          msg.reply "#{config.url}:#{config.execution_port}/v1/actionexecutions/#{s.body.to_s[1..-2]}"
         elsif l.length > 0
           response_text = "possible matches:"
           l.each do |match|
