@@ -48,7 +48,7 @@ module Lita
             name: command_array[0..1].join('_'),
             format: "#{command_array[0..1].join(' ')} {{pack}}",
             command: msg.matches.flatten.first,
-            user: msg.user,
+            user: msg.user.name,
             source_channel: 'chatops',
             notification_channel: 'lita'
           }
