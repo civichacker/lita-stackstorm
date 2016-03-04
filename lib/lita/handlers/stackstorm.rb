@@ -25,8 +25,24 @@ module Lita
 
       route /^!(.*)$/, :call_alias, command: false, help: {}
 
+      def auth_builder
+        if config.auth_port == 443 and config.url.start_with?('https')
+          "#{config.url}/auth"
+        else
+          "#{config.url}:#{config.auth_port}/v1"
+        end
+      end
+
+      def url_builder
+        if config.execution_port == 443 and config.url.start_with?('https')
+          "#{config.url}/api"
+        else
+          "#{config.url}:#{config.execution_port}/v1"
+        end
+      end
+
       def authenticate
-        resp = http.post("#{config.url}:#{config.auth_port}/v1/tokens") do |req|
+        resp = http.post("#{auth_builder()}/tokens") do |req|
           req.body = {}
           req.headers['Authorization'] = http.set_authorization_header(:basic_auth, config.username, config.password)
         end
@@ -52,7 +68,7 @@ module Lita
             source_channel: 'chatops',
             notification_channel: 'lita'
           }
-          s = make_post_request(":#{config.execution_port}/v1/aliasexecution", payload)
+          s = make_post_request("/aliasexecution", payload)
           j = JSON.parse(s.body)
           msg.reply "Got it! Details available at #{config.url}/#/history/#{j['execution']['id']}/general"
         elsif l.length > 0
@@ -70,7 +86,7 @@ module Lita
         if expired
           authenticate
         end
-        s = make_request(":#{config.execution_port}/v1/actionalias", "")
+        s = make_request("/actionalias", "")
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
         else
@@ -102,7 +118,7 @@ module Lita
       end
 
       def make_request(path, body)
-        resp = http.get("#{config.url}#{path}") do |req|
+        resp = http.get("#{url_builder()}#{path}") do |req|
           req.body = {}
           req.headers = headers
           req.body = body.to_json
@@ -111,7 +127,7 @@ module Lita
       end
 
       def make_post_request(path, body)
-        resp = http.post("#{config.url}#{path}") do |req|
+        resp = http.post("#{url_builder()}#{path}") do |req|
           req.body = {}
           req.headers = headers
           req.body = body.to_json
