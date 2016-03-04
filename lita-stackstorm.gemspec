@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name          = "lita-stackstorm"
-  spec.version       = "0.4.0"
+  spec.version       = "0.5.0"
   spec.authors       = ["Jurnell Cockhren"]
   spec.email         = ["jurnell@sophicware.com"]
   spec.description   = "Stackstorm handler for lita 4+"
