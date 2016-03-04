@@ -47,13 +47,14 @@ module Lita
           payload = {
             name: command_array[0..1].join('_'),
             format: "#{command_array[0..1].join(' ')} {{pack}}",
-            command: msg,
-            user: msg.user,
+            command: msg.matches.flatten.first,
+            user: msg.user.name,
             source_channel: 'chatops',
             notification_channel: 'lita'
           }
           s = make_post_request(":#{config.execution_port}/v1/aliasexecution", payload)
-          msg.reply "#{config.url}:#{config.execution_port}/#/history/#{s.body.to_s[1..-2]}/general"
+          j = JSON.parse(s.body)
+          msg.reply "Got it! Details available at #{config.url}/#/history/#{j['execution']['id']}/general"
         elsif l.length > 0
           response_text = "possible matches:"
           l.each do |match|
