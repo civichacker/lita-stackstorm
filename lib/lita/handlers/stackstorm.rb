@@ -1,5 +1,14 @@
 require 'json'
 
+class Array
+  def swap!(a,b)
+    self[a], self[b] = self[b], self[a]
+    self
+  end
+end
+
+
+
 module Lita
   module Handlers
     class Stackstorm < Handler
@@ -56,13 +65,20 @@ module Lita
           authenticate
         end
         command_array = msg.matches.flatten.first.split
+        command_set = Set.new(command_array)
+
         candidates = redis.scan_each(:match => "#{command_array[0..1].join(' ')}*")
-        p = candidates.take_while {|i| i.split.length == command_array.length}
-        l = candidates.take_while {|i| i.split.length > command_array.length}
-        if p.length == 1
+
+        candidates_set = Set.new(candidates)
+        h = candidates_set.classify do |s|
+          st = Set.new(s.split /(?<=})\s|\s(?={)|\b\s\b/)
+          (st - command_set).length
+        end
+
+        if h[h.keys.min].length == 1
           payload = {
-            name: command_array[0..1].join('_'),
-            format: "#{command_array[0..1].join(' ')} {{pack}}",
+            name: command_array.swap!(command_array.length-2,command_array.length-1).join('_'),
+            format: h[h.keys.min].to_a.join(" "),
             command: msg.matches.flatten.first,
             user: msg.user.name,
             source_channel: 'chatops',
@@ -70,10 +86,14 @@ module Lita
           }
           s = make_post_request("/aliasexecution", payload)
           j = JSON.parse(s.body)
-          msg.reply "Got it! Details available at #{config.url}/#/history/#{j['execution']['id']}/general"
-        elsif l.length > 0
+          if s.success?
+            msg.reply "Got it! Details available at #{config.url}/#/history/#{j['execution']['id']}/general"
+          else
+            msg.reply "Execution failed with message: #{j['faultstring']}"
+          end
+        elsif h[h.keys.min].length > 1
           response_text = "possible matches:"
-          l.each do |match|
+          h[h.keys.min].each do |match|
             response_text+= "\n\t#{match}"
           end
           msg.reply response_text
