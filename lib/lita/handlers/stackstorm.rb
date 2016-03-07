@@ -139,9 +139,8 @@ module Lita
 
       def make_request(path, body)
         resp = http.get("#{url_builder()}#{path}") do |req|
-          req.body = {}
           req.headers = headers
-          req.body = body.to_json
+          req.body = body.to_json if not body.empty?
         end
         resp
       end
