@@ -35,7 +35,7 @@ module Lita
       route /^!(.*)$/, :call_alias, command: false, help: {}
 
       def auth_builder
-        if config.auth_port == '443' and config.url.start_with?('https')
+        if Integer(config.auth_port) == 443 and config.url.start_with?('https')
           "#{config.url}/auth"
         else
           "#{config.url}:#{config.auth_port}/v1"
@@ -43,7 +43,7 @@ module Lita
       end
 
       def url_builder
-        if config.execution_port == '443' and config.url.start_with?('https')
+        if Integer(config.execution_port) == 443 and config.url.start_with?('https')
           "#{config.url}/api"
         else
           "#{config.url}:#{config.execution_port}/v1"
