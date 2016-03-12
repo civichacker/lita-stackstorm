@@ -106,8 +106,9 @@ module Lita
           extra_params = '(\\s+(\\S+)\\s*=("([\\s\\S]*?)"|\'([\\s\\S]*?)\'|({[\\s\\S]*?})|(\\S+))\\s*)*'
           j.take_while{|i| i['enabled'] }.each do |command|
             command['formats'].each do |format|
-              f = format.gsub(/(\s*){{\s*\S+\s*=\s*(?:({.+?}|.+?))\s*}}(\s*)/, '\\s*([\\s\\S]+?)?\\s*')
-              f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\s\\S]+?)\\s*')
+              f = format.gsub(/(\s*){{\s*\S+\s*=\s*(?:({.+?}|.+?))\s*}}(\s*)/, '\\s*([\\S]+)?\\s*')
+              f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\S]+?)\\s*')
+              puts f
               f = "^\\s*#{f}#{extra_params}\\s*$"
               redis.set(f, {format: format, object: command}.to_json)
               a+= "#{format} -> #{command['description']}\n"
