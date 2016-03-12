@@ -110,7 +110,7 @@ module Lita
               f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\s\\S]+?)\\s*')
               f = "^\\s*#{f}#{extra_params}\\s*$"
               redis.set(f, {format: format, object: command}.to_json)
-              a+= "#{format} -> #{command['action_ref']}\n"
+              a+= "#{format} -> #{command['description']}\n"
             end
           end
           msg.reply a
