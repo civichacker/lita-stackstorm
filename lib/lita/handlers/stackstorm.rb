@@ -106,15 +106,20 @@ module Lita
         if expired
           authenticate
         end
+        redis.keys.each {|k| redis.del k }
         s = make_request("/actionalias", "")
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
         else
           j = JSON.parse(s.body)
           a = ""
+          extra_params = '(\\s+(\\S+)\\s*=("([\\s\\S]*?)"|\'([\\s\\S]*?)\'|({[\\s\\S]*?})|(\\S+))\\s*)*'
           j.take_while{|i| i['enabled'] }.each do |command|
             command['formats'].each do |format|
-              redis.set(format, command['action_ref'])
+              f = format.gsub(/(\s*){{\s*\S+\s*=\s*(?:({.+?}|.+?))\s*}}(\s*)/, '\\s*([\\s\\S]+?)?\\s*')
+              f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\s\\S]+?)\\s*')
+              f = "^\\s*#{f}#{extra_params}\\s*$"
+              redis.set(f, {format: format, object: command}.to_json)
               a+= "#{format} -> #{command['action_ref']}\n"
             end
           end
