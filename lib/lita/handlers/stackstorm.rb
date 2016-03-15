@@ -1,4 +1,5 @@
 require 'json'
+require 'net/http'
 
 class Array
   def swap!(a,b)
@@ -20,6 +21,8 @@ module Lita
       config :auth_port, required: false, default: 9100
       config :execution_port, required: false, default: 9101
 
+      on :connected, :stream_listen
+
       class << self
         attr_accessor :token, :expires
       end
@@ -33,6 +36,14 @@ module Lita
       route /^st2 (ls|aliases|list)$/, :list, command: false, help: { "st2 list" => "list available st2 chatops commands" }
 
       route /^!(.*)$/, :call_alias, command: false, help: {}
+
+      def stream_listen(payload)
+        target = Source.new(room: '#test-the-things')
+        robot.send_message(target, "Hello")
+        Thread.new {
+          
+        }
+      end
 
       def auth_builder
         if Integer(config.auth_port) == 443 and config.url.start_with?('https')
