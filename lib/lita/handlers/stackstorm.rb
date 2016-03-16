@@ -1,4 +1,6 @@
 require 'json'
+require 'net/http'
+require 'yaml'
 
 class Array
   def swap!(a,b)
@@ -19,6 +21,9 @@ module Lita
       config :password, required: true
       config :auth_port, required: false, default: 9100
       config :execution_port, required: false, default: 9101
+      config :emoji_icon, required: false, default: ":panda:"
+
+      on :connected, :stream_listen
 
       class << self
         attr_accessor :token, :expires
@@ -33,6 +38,55 @@ module Lita
       route /^st2 (ls|aliases|list)$/, :list, command: false, help: { "st2 list" => "list available st2 chatops commands" }
 
       route /^!(.*)$/, :call_alias, command: false, help: {}
+
+      def direct_post(channel, message, user)
+        case robot.config.robot.adapter
+        when :slack
+          payload = {
+            action: "slack.chat.postMessage",
+            parameters: {
+              username: user,
+              text: message,
+              icon_emoji: config.emoji_icon,
+              channel: channel
+            }
+          }
+          make_post_request("/executions", payload)
+        else
+          target = Lita::Source.new(user: user, room: Lita::Room.fuzzy_find(channel))
+          robot.send_message(target, message)
+        end
+      end
+
+      def stream_listen(payload)
+        if expired
+          authenticate
+        end
+        uri = URI("#{url_builder()}/stream")
+        Thread.new {
+          Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+            request = Net::HTTP::Get.new uri
+            request['X-Auth-Token'] = headers()['X-Auth-Token']
+            request['Content-Type'] = 'application/x-yaml'
+            http.request request do |response|
+              io = StringIO.new
+              response.read_body do |chunk|
+                c = chunk.strip
+                if c.length > 0
+                  io.write chunk
+                  event = YAML.load(io.string)
+                  if event['event'] =~ /st2\.announcement/
+                    direct_post(event['data']['payload']['channel'],
+                                event['data']['payload']['message'],
+                                event['data']['payload']['user'])
+                  end
+                  io.reopen("")
+                end
+              end
+            end
+          end
+        }
+      end
 
       def auth_builder
         if Integer(config.auth_port) == 443 and config.url.start_with?('https')
@@ -108,7 +162,6 @@ module Lita
             command['formats'].each do |format|
               f = format.gsub(/(\s*){{\s*\S+\s*=\s*(?:({.+?}|.+?))\s*}}(\s*)/, '\\s*([\\S]+)?\\s*')
               f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\S]+?)\\s*')
-              puts f
               f = "^\\s*#{f}#{extra_params}\\s*$"
               redis.set(f, {format: format, object: command}.to_json)
               a+= "#{format} -> #{command['description']}\n"
