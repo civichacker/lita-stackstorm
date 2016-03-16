@@ -22,6 +22,7 @@ gem "lita-stackstorm"
 
 * `auth_port` (Integer) – Port used for Authentication. Defaults to `9101`.
 * `execution_port` (Integer) – Port for executions. Defaults to `9100`.
+* `emoji_icon` (Integer) – Emoji used when bot injests event stream. Defaults to `:panda:`.
 
 ### Example
 
