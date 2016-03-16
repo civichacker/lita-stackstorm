@@ -40,16 +40,22 @@ module Lita
       route /^!(.*)$/, :call_alias, command: false, help: {}
 
       def direct_post(channel, message, user)
-        payload = {
-          action: "slack.chat.postMessage",
-          parameters: {
-            username: user,
-            text: message,
-            icon_emoji: config.emoji_icon,
-            channel: channel
+        case robot.config.robot.adapter
+        when :slack
+          payload = {
+            action: "slack.chat.postMessage",
+            parameters: {
+              username: user,
+              text: message,
+              icon_emoji: config.emoji_icon,
+              channel: channel
+            }
           }
-        }
-        make_post_request("/executions", payload)
+          make_post_request("/executions", payload)
+        else
+          target = Lita::Source.new(user: user, room: Lita::Room.fuzzy_find(channel))
+          robot.send_message(target, message)
+        end
       end
 
       def stream_listen(payload)
