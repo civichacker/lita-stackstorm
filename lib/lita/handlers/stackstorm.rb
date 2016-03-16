@@ -21,6 +21,7 @@ module Lita
       config :password, required: true
       config :auth_port, required: false, default: 9100
       config :execution_port, required: false, default: 9101
+      config :emoji_icon, required: false
 
       on :connected, :stream_listen
 
@@ -44,7 +45,7 @@ module Lita
           parameters: {
             username: user,
             text: message,
-            icon_emoji:":sophicware:",
+            icon_emoji: config.emoji_icon,
             channel: channel
           }
         }
