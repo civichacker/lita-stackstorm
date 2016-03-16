@@ -1,4 +1,4 @@
-# lita-stackstorm [![Gem Version](https://badge.fury.io/rb/lita-stackstorm.svg)](http://badge.fury.io/rb/lita-stackstorm) **BETA**
+# lita-stackstorm [![Gem Version](https://badge.fury.io/rb/lita-stackstorm.svg)](http://badge.fury.io/rb/lita-stackstorm)
 
 **lita-stackstorm** is an handler for [Lita](https://www.lita.io) that allows your bot to interact with your stackstorm installation via st2api.
 
