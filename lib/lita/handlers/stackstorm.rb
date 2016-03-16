@@ -21,7 +21,7 @@ module Lita
       config :password, required: true
       config :auth_port, required: false, default: 9100
       config :execution_port, required: false, default: 9101
-      config :emoji_icon, required: false
+      config :emoji_icon, required: false, default: ":panda:"
 
       on :connected, :stream_listen
 
