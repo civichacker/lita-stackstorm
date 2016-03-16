@@ -1,5 +1,6 @@
 require 'json'
 require 'net/http'
+require 'yaml'
 
 class Array
   def swap!(a,b)
@@ -37,11 +38,46 @@ module Lita
 
       route /^!(.*)$/, :call_alias, command: false, help: {}
 
+      def direct_post(channel, message, user)
+        payload = {
+          action: "slack.chat.postMessage",
+          parameters: {
+            username: user,
+            text: message,
+            icon_emoji:":sophicware:",
+            channel: channel
+          }
+        }
+        make_post_request("/executions", payload)
+      end
+
       def stream_listen(payload)
-        target = Source.new(room: '#test-the-things')
-        robot.send_message(target, "Hello")
+        if expired
+          authenticate
+        end
+        uri = URI("#{url_builder()}/stream")
         Thread.new {
-          
+          Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+            request = Net::HTTP::Get.new uri
+            request['X-Auth-Token'] = headers()['X-Auth-Token']
+            request['Content-Type'] = 'application/x-yaml'
+            http.request request do |response|
+              io = StringIO.new
+              response.read_body do |chunk|
+                c = chunk.strip
+                if c.length > 0
+                  io.write chunk
+                  event = YAML.load(io.string)
+                  if event['event'] =~ /st2\.announcement/
+                    direct_post(event['data']['payload']['channel'],
+                                event['data']['payload']['message'],
+                                event['data']['payload']['user'])
+                  end
+                  io.reopen("")
+                end
+              end
+            end
+          end
         }
       end
 
