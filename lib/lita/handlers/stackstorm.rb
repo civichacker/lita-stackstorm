@@ -1,15 +1,13 @@
-require 'json'
-require 'net/http'
-require 'yaml'
+require "json"
+require "net/http"
+require "yaml"
 
 class Array
-  def swap!(a,b)
+  def swap!(a, b)
     self[a], self[b] = self[b], self[a]
     self
   end
 end
-
-
 
 module Lita
   module Handlers
@@ -62,34 +60,34 @@ module Lita
         if expired
           authenticate
         end
-        uri = URI("#{url_builder()}/stream")
-        Thread.new {
-          Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+        uri = URI("#{url_builder}/stream")
+        Thread.new do
+          Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
             request = Net::HTTP::Get.new uri
-            request['X-Auth-Token'] = headers()['X-Auth-Token']
-            request['Content-Type'] = 'application/x-yaml'
+            request["X-Auth-Token"] = headers["X-Auth-Token"]
+            request["Content-Type"] = "application/x-yaml"
             http.request request do |response|
               io = StringIO.new
               response.read_body do |chunk|
                 c = chunk.strip
-                if c.length > 0
+                unless c.empty?
                   io.write chunk
                   event = YAML.load(io.string)
-                  if event['event'] =~ /st2\.announcement/
-                    direct_post(event['data']['payload']['channel'],
-                                event['data']['payload']['message'],
-                                event['data']['payload']['user'])
+                  if event["event"] =~ /st2\.announcement/
+                    direct_post(event["data"]["payload"]["channel"],
+                                event["data"]["payload"]["message"],
+                                event["data"]["payload"]["user"])
                   end
                   io.reopen("")
                 end
               end
             end
           end
-        }
+        end
       end
 
       def auth_builder
-        if Integer(config.auth_port) == 443 and config.url.start_with?('https')
+        if (Integer(config.auth_port) == 443) && config.url.start_with?("https")
           "#{config.url}/auth"
         else
           "#{config.url}:#{config.auth_port}/v1"
@@ -97,7 +95,7 @@ module Lita
       end
 
       def url_builder
-        if Integer(config.execution_port) == 443 and config.url.start_with?('https')
+        if (Integer(config.execution_port) == 443) && config.url.start_with?("https")
           "#{config.url}/api"
         else
           "#{config.url}:#{config.execution_port}/v1"
@@ -105,12 +103,12 @@ module Lita
       end
 
       def authenticate
-        resp = http.post("#{auth_builder()}/tokens") do |req|
+        resp = http.post("#{auth_builder}/tokens") do |req|
           req.body = {}
-          req.headers['Authorization'] = http.set_authorization_header(:basic_auth, config.username, config.password)
+          req.headers["Authorization"] = http.set_authorization_header(:basic_auth, config.username, config.password)
         end
-        self.class.token = JSON.parse(resp.body)['token']
-        self.class.expires = JSON.parse(resp.body)['expiry']
+        self.class.token = JSON.parse(resp.body)["token"]
+        self.class.expires = JSON.parse(resp.body)["expiry"]
         resp
       end
 
@@ -122,7 +120,7 @@ module Lita
         found = ""
         redis.scan_each do |a|
           possible = /#{a}/.match(command)
-          if not possible.nil?
+          unless possible.nil?
             found = a
             break
           end
@@ -130,12 +128,12 @@ module Lita
 
         jobject = JSON.parse(redis.get(found))
         payload = {
-          name: jobject['object']['name'],
-          format: jobject['format'],
+          name: jobject["object"]["name"],
+          format: jobject["format"],
           command: command,
           user: msg.user.name,
-          source_channel: 'chatops',
-          notification_channel: 'lita'
+          source_channel: "chatops",
+          notification_channel: "lita"
         }
         s = make_post_request("/aliasexecution", payload)
         j = JSON.parse(s.body)
@@ -150,7 +148,7 @@ module Lita
         if expired
           authenticate
         end
-        redis.keys.each {|k| redis.del k }
+        redis.keys.each { |k| redis.del k }
         s = make_request("/actionalias", "")
         if JSON.parse(s.body).empty?
           msg.reply "No Action Aliases Registered"
@@ -158,13 +156,13 @@ module Lita
           j = JSON.parse(s.body)
           a = ""
           extra_params = '(\\s+(\\S+)\\s*=("([\\s\\S]*?)"|\'([\\s\\S]*?)\'|({[\\s\\S]*?})|(\\S+))\\s*)*'
-          j.take_while{|i| i['enabled'] }.each do |command|
-            command['formats'].each do |format|
+          j.take_while { |i| i["enabled"] }.each do |command|
+            command["formats"].each do |format|
               f = format.gsub(/(\s*){{\s*\S+\s*=\s*(?:({.+?}|.+?))\s*}}(\s*)/, '\\s*([\\S]+)?\\s*')
               f = f.gsub(/\s*{{.+?}}\s*/, '\\s*([\\S]+?)\\s*')
               f = "^\\s*#{f}#{extra_params}\\s*$"
-              redis.set(f, {format: format, object: command}.to_json)
-              a+= "#{format} -> #{command['description']}\n"
+              redis.set(f, { format: format, object: command }.to_json)
+              a += "#{format} -> #{command['description']}\n"
             end
           end
           msg.reply a
@@ -187,15 +185,15 @@ module Lita
       end
 
       def make_request(path, body)
-        resp = http.get("#{url_builder()}#{path}") do |req|
+        resp = http.get("#{url_builder}#{path}") do |req|
           req.headers = headers
-          req.body = body.to_json if not body.empty?
+          req.body = body.to_json unless body.empty?
         end
         resp
       end
 
       def make_post_request(path, body)
-        resp = http.post("#{url_builder()}#{path}") do |req|
+        resp = http.post("#{url_builder}#{path}") do |req|
           req.body = {}
           req.headers = headers
           req.body = body.to_json
@@ -203,11 +201,10 @@ module Lita
         resp
       end
 
-
       def headers
         headers = {}
-        headers['Content-Type'] = 'application/json'
-        headers['X-Auth-Token'] = "#{self.class.token}"
+        headers["Content-Type"] = "application/json"
+        headers["X-Auth-Token"] = self.class.token.to_s
         headers
       end
 
