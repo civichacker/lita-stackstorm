@@ -25,4 +25,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "github_changelog_generator"
   spec.add_development_dependency "bump"
   spec.add_development_dependency "rubocop"
+  spec.add_development_dependency "webmock"
 end
